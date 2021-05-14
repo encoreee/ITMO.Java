@@ -35,8 +35,8 @@ public class Main {
         //  }
 
         //  Task 7
-        int[] massiveTask7 = new int[]{0, 2, 1, 3, 4, 5,4,3};
-           int [] uniqueArr = frequentNum(massiveTask7,3);
+     //   int[] massiveTask7 = new int[]{0, 2, 1, 3, 4, 5, 4, 3, 45, 67, 34, 4, 5, 67, 5, 4, 3, 6, 8, 8, 3, 0, 9, 8, 4, 3, 2, 3, 5, 6, 7, 8};
+      //  int[] uniqueArr = frequentNum(massiveTask7, 3);
 
     }
 
@@ -244,14 +244,14 @@ public class Main {
                 }
             }
 
-            if (exist){
+            if (exist) {
                 continue;
             }
 
             targets[targetsCounter] = number;
             int maskCounter = 1;
-            for (int j = i+1; j < array.length; j++) {
-                if(array[i] == array[j]){
+            for (int j = i + 1; j < array.length; j++) {
+                if (array[i] == array[j]) {
                     maskCounter++;
                 }
             }
@@ -267,26 +267,27 @@ public class Main {
             finalMask[i] = mask[i];
         }
 
-        int max = finalMask[0];
-        int index = 0;
-        for (int i = 1; i < finalMask.length; i++) {
-            if(finalMask[i] > max){
-                max = finalMask[i];
-                index = i;
+
+        int tempT = 0;
+        int tempM = 0;
+
+        for (int i = 0; i < targetsCounter; i++) {
+            for (int j = 1; j < (targetsCounter - i); j++) {
+                if (finalMask[j - 1] < finalMask[j]) {
+
+                    tempM = finalMask[j - 1];
+                    finalMask[j - 1] = finalMask[j];
+                    finalMask[j] = tempM;
+                    tempT = finalTargets[j - 1];
+                    finalTargets[j - 1] = finalTargets[j];
+                    finalTargets[j] = tempT;
+                }
             }
         }
 
-        resArray[0] = targets[index];
-        magicNum--;
-
-        
-
-
-
-
-
+        for (int i = 0; i < magicNum; i++) {
+            resArray[i] = finalTargets[i];
+        }
         return resArray;
     }
-
-
 }
