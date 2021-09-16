@@ -1,20 +1,26 @@
 package lessons;
-
 import java.awt.desktop.AboutEvent;
+import java.util.ArrayList;
 
 public class Box extends Shape {
 
-    double limit;
+    ArrayList<Shape> shapes = new ArrayList<>();
+    private double vol  = this.getVolume();
 
-
-    public Box(double volume) {
-        limit = volume;
+    public void Box()
+    {
     }
 
-    boolean add(Shape s) {
-        if ((volume + s.volume) < limit) {
+    public boolean add_sh (Shape s1)
+    {
+        if (vol>s1.getVolume())
+        {
+            shapes.add(s1);
+            vol = (vol - s1.getVolume());
             return true;
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
