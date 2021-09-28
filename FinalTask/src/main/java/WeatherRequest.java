@@ -15,9 +15,7 @@ public class WeatherRequest {
         weatherCall.append("&");
         weatherCall.append("lang=ru&");
         weatherCall.append("appid=fc3cd123bc29efe2fc92c6400250a878");
-
         weatherCall.toString();
-        System.out.println(weatherCall.toString());
 
         URL url = new URL("https://api.openweathermap.org/data/2.5/weather?" + weatherCall.toString());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();

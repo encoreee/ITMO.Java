@@ -4,10 +4,12 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import jsonResponse.*;
 
@@ -24,17 +26,46 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "";
+        return "2014200237:AAF93pWFmiLaglyFPO2fM410inS24znVWjY";
     }
 
 
     public void onUpdateReceived(Update update) {
+        if (update.hasMessage()) {
+            try {
+                handleMessage(update.getMessage());
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-        WeatherRequest weatherRequest = new WeatherRequest();
+    public void handleMessage(Message message) throws TelegramApiException {
+        if (message.hasText() && message.hasEntities()) {
+            Optional<MessageEntity> commandEntity = message.getEntities()
+                    .stream()
+                    .filter(e -> "bot_command".equals(e.getType())).findFirst();
+            if (commandEntity.isPresent()) {
+                String command = message.getText().substring(commandEntity.get().getOffset(), commandEntity.get().getLength());
+                switch (command) {
+                    case "//ubscribe" -> {
+                        execute(
+                                SendMessage.builder()
+                                        .text("Subcribed")
+                                        .chatId(message.getChatId().toString()).build());
+                    }
+                    case "/unsubscribe" -> {
+                        execute(
+                                SendMessage.builder()
+                                        .text("Unsubcribed")
+                                        .chatId(message.getChatId().toString()).build());
+                    }
+                }
+            }
+        }
 
-        if (update.hasMessage() && update.getMessage().hasText()) {
+        if (!message.hasEntities()) {
 
-            Message message = update.getMessage();
             String message_text = message.getText();
             switch (message_text) {
                 case "/start" -> {
@@ -45,15 +76,15 @@ public class Bot extends TelegramLongPollingBot {
                     message.setText(stringBuilder.toString());
                 }
                 default -> {
-                    String response = null;
+                    WThread wThread = new WThread("WeatherThread");
+                    wThread.setMessage(message_text);
+                    wThread.start();
                     try {
-                        response = weatherRequest.makeRequest(message_text);
-                    } catch (IOException e) {
+                        wThread.join();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    GsonBuilder builder = new GsonBuilder();
-                    Gson gson = builder.create();
-                    WeatherResponse weatherResponse = gson.fromJson(response.toString(), WeatherResponse.class);
+                    WeatherResponse weatherResponse = wThread.getResponse();
 
                     try {
                         execute((SendMessage.builder()
@@ -63,6 +94,8 @@ public class Bot extends TelegramLongPollingBot {
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
+
+
                 }
             }
         }
