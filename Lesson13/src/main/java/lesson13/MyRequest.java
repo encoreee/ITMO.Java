@@ -37,6 +37,9 @@ public class MyRequest {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
 
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+
         WikiResponse wikiResponse = gson.fromJson(response.toString(), WikiResponse.class);
         Query query = wikiResponse.getQuery();
         List<Search> searches = query.getSearch();
