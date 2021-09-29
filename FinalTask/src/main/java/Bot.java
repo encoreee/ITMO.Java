@@ -6,6 +6,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 import jsonResponse.*;
@@ -45,17 +48,85 @@ public class Bot extends TelegramLongPollingBot {
             if (commandEntity.isPresent()) {
                 String command = message.getText().substring(commandEntity.get().getOffset(), commandEntity.get().getLength());
                 switch (command) {
-                    case "//ubscribe" -> {
-                        execute(
-                                SendMessage.builder()
-                                        .text("Subcribed")
-                                        .chatId(message.getChatId().toString()).build());
+
+                    case "/start" -> {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append("Hello, this is Alex's weather bot\n");
+                        stringBuilder.append("Type your region to know forecast\n");
+
+                        message.setText(stringBuilder.toString());
                     }
+
+                    case "/subscribe" -> {
+
+                        String lastName = message.getChat().getLastName();
+                        String name = message.getChat().getFirstName();
+                        long chatId = message.getChatId();
+                        String fullName = lastName.concat(" ").concat(name);
+
+                        try {
+                            DbHandler dbHandler = DbHandler.getInstance();
+                            List<Subscribe> subscribes = dbHandler.getAllSubscreibes();
+
+                            if(subscribes.isEmpty()){
+                                dbHandler.addSubscribe(new Subscribe(0, fullName, chatId, true));
+                                execute(
+                                        SendMessage.builder()
+                                                .text("Subscribed")
+                                                .chatId(message.getChatId().toString()).build());
+                            }
+
+                            for (Subscribe subscribe : subscribes) {
+
+
+                                if (subscribe.id == chatId && subscribe.enable == true) {
+                                    execute(
+                                            SendMessage.builder()
+                                                    .text("Already subscribed")
+                                                    .chatId(message.getChatId().toString()).build());
+                                } else {
+                                    dbHandler.addSubscribe(new Subscribe(0, fullName, chatId, true));
+                                    execute(
+                                            SendMessage.builder()
+                                                    .text("Subscribed")
+                                                    .chatId(message.getChatId().toString()).build());
+                                }
+                            }
+
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+
+
+                    }
+
                     case "/unsubscribe" -> {
-                        execute(
-                                SendMessage.builder()
-                                        .text("Unsubcribed")
-                                        .chatId(message.getChatId().toString()).build());
+
+                        long chatId = message.getChatId();
+
+                        try {
+                            DbHandler dbHandler = DbHandler.getInstance();
+                            List<Subscribe> subscribes = dbHandler.getAllSubscreibes();
+                            for (Subscribe subscribe : subscribes) {
+                                if (subscribe.telegram_id == chatId && subscribe.enable == true) {
+                                    dbHandler.deleteSubscribe(chatId);
+                                    execute(
+                                            SendMessage.builder()
+                                                    .text("Unsubscribed")
+                                                    .chatId(message.getChatId().toString()).build());
+                                } else {
+                                    execute(
+                                            SendMessage.builder()
+                                                    .text("You are not subscribed")
+                                                    .chatId(message.getChatId().toString()).build());
+                                }
+                            }
+
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+
+
                     }
                 }
             }
@@ -65,13 +136,7 @@ public class Bot extends TelegramLongPollingBot {
 
             String message_text = message.getText();
             switch (message_text) {
-                case "/start" -> {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.append("Hello, this is Alex's weather bot\n");
-                    stringBuilder.append("Type your region to know forecast\n");
 
-                    message.setText(stringBuilder.toString());
-                }
                 default -> {
                     WThread wThread = new WThread("WeatherThread");
                     wThread.setMessage(message_text);
