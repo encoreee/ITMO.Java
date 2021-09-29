@@ -185,4 +185,6 @@ public class Bot extends TelegramLongPollingBot {
 
         return stringBuilder.toString();
     }
+
+    public static void executeSchedule(){}
 }
